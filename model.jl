@@ -9,6 +9,7 @@ function MRS(g, F, P, path_costs, A, w_e)
 
     # Initialize the optimization model
     model = Model(Gurobi.Optimizer)
+    set_optimizer_attribute(model, "OutputFlag", 0)
 
     @variable(model, x[1:n, 1:n], Bin)
     @variable(model, y_f[1:f], Bin)
@@ -61,6 +62,7 @@ function SM(g, A_f, N_f, F, distances, lamda_bars, c_f, w_e)
     ε = 0.0001
 
     model = Model(Gurobi.Optimizer)
+    set_optimizer_attribute(model, "OutputFlag", 0)
 
     @variable(model, x[1:n, 1:n], Bin)
     @variable(model, u_f[1:f] >= 0)  # Non-negative variables
@@ -141,6 +143,7 @@ function PM(g, A_f, N_f, F, distances, c_f, w_e, P, A)
     n = nv(g)
 
     model = Model(Gurobi.Optimizer)
+    set_optimizer_attribute(model, "OutputFlag", 0)
 
     @variable(model, x[1:n, 1:n], Bin)          # Constraints (40)
     @variable(model, u_f[1:f] >= 0)             # Constraints (41)
@@ -203,77 +206,12 @@ function PM(g, A_f, N_f, F, distances, c_f, w_e, P, A)
     return model, objective_value(model), value.(x), value.(u_f), value.(r_fij)
 end
 
-# function PM_cp(g, A_f, N_f, F, distances, c_f, w_e, P, A, shortest_path_arcs)
-#     f = length(F)
-#     n = nv(g)
-
-#     model = Model(Gurobi.Optimizer)
-
-#     @variable(model, x[1:n, 1:n], Bin)          # Constraints (40)
-#     @variable(model, u_f[1:f] >= 0)             # Constraints (41)
-#     @variable(model, r_fij[1:f, 1:n, 1:n] >= 0)   # Constraints (41)
-
-#     # Objective function
-#     @objective(model, Min, sum(w_e * x[i, j] for i in 1:n, j in 1:n if has_edge(g, i, j)) +
-#                        sum(c_f * distances[i,j] * r_fij[a, i, j] for a in 1:f, i in 1:n, j in 1:n if (i, j) in A_f[F[a]]))
-
-#     # Constraints
-#     for a in 1:f
-#         for i in 1:n
-#             for j in 1:n
-#                 if (i, j) ∉ A_f[F[a]]
-#                     @constraint(model, r_fij[a, i, j] == 0)
-#                 end
-#             end
-#         end
-#     end
-
-#     for i in 1:n
-#         for j in 1:n
-#             if !has_edge(g, i, j)
-#                 @constraint(model, x[i, j] == 0)
-#             end
-#         end
-#     end
-
-#     # Constraints (37)
-#     for a in 1:f
-#         spa = shortest_path_arcs[F[a]]
-#         @constraint(model, 1 - sum(x[i, j] for (i, j) in spa) <= u_f[a])
-#     end
-
-
-#     # Constraints (38)
-#     for a in 1:f
-#         for i in N_f[F[a]]
-#             if i == F[a][1]  # Source node
-#                 @constraint(model, sum(r_fij[a, i, j] for (i, j) in A_f[F[a]]) - sum(r_fij[a, j, i] for (j, i) in A_f[F[a]]) == u_f[a])
-#             elseif i == F[a][2]  # Destination node
-#                 @constraint(model, sum(r_fij[a, i, j] for (i, j) in A_f[F[a]]) - sum(r_fij[a, j, i] for (j, i) in A_f[F[a]]) == -u_f[a])
-#             else  # Intermediate nodes
-#                 @constraint(model, sum(r_fij[a, i, j] for (i, j) in A_f[F[a]]) - sum(r_fij[a, j, i] for (j, i) in A_f[F[a]]) == 0)
-#             end
-#         end
-#     end    
-
-#     # Constraints (39)
-#     for a in 1:f
-#         for (i, j) in A_f[F[a]]
-#             @constraint(model, r_fij[a, i, j] <= 1 - x[i, j])
-#         end
-#     end
-
-#     # Solve the model
-#     optimize!(model)
-
-#     return model, objective_value(model), value.(x), value.(u_f), value.(r_fij)
-# end
-
 function PM_cp(g, A_f, N_f, F, distances, c_f, w_e, P, A, shortest_path_arcs)
     f = length(F)
     n = nv(g)
 
     model = Model(Gurobi.Optimizer)
+    set_optimizer_attribute(model, "OutputFlag", 0)
 
     @variable(model, x[1:n, 1:n], Bin)          # Constraints (40)
     @variable(model, u_f[1:f] >= 0)             # Constraints (41)

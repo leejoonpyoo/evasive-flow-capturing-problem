@@ -1,6 +1,6 @@
 using Graphs, Random, DataStructures
 
-################################## Data Generation ##################################
+## Data Generation ##
 function add_edge(g, u, v, distance, distances)
     if !has_edge(g, u, v)
         add_edge!(g, u, v)
@@ -38,12 +38,12 @@ function generate_25_node_network()
     return g, distances
 end
 
-##################################### Functions #####################################
+## Functions ##
 function shortest_path_distances(g, start, goal, distances)
     if has_edge(g, start, goal)
         return distances[start, goal]
     else
-        println("Calculating shortest path length from ", start, " to ", goal)
+        # println("Calculating shortest path length from ", start, " to ", goal)
         dijkstra_distances = dijkstra_shortest_paths(g, start, distances)
         return dijkstra_distances[goal]
     end
@@ -87,7 +87,7 @@ function find_paths_within_tolerance(g, distances, lamda, start, goal)
     stack = [([start], 0)]  # Stack holds tuples of (path, total_length)
     base_distance = shortest_path_distances(g, start, goal, distances)
     tolerance = lamda * base_distance
-    println("tolerance: ", tolerance)
+    # println("tolerance: ", tolerance)
 
     while !isempty(stack)
         path, current_distance = pop!(stack)
@@ -129,7 +129,7 @@ function find_paths_and_calculate_costs(g, distances, lamda, c_f)
         for v in (u+1):25
             push!(F, (u, v))
             paths = find_paths_within_tolerance(g, distances, lamda, u, v)
-            println(paths)
+            # println(paths)
             P[(u, v)] = paths
             A[(u, v)] = [get_arc_set(path) for path in paths]
             path_costs[(u, v)] = [calculate_path_cost(path, distances, c_f) for path in paths]
@@ -187,47 +187,6 @@ function calculate_nondominant_nodes(A_f)
     return N_f
 end
 
-# function shortest_path_dijkstra(g::Graph, start::Int, goal::Int, distances::Matrix{Int})
-#     n = nv(g)
-#     dist = fill(typemax(Int), n)
-#     dist[start] = 0
-#     prev = fill(-1, n)  # To reconstruct the path
-#     pq = PriorityQueue{Int, Int}()  # node => distance
-#     enqueue!(pq, start => 0)
-
-#     while !isempty(pq)
-#         current_node, current_dist = peek(pq)
-#         dequeue!(pq)
-
-#         if current_node == goal
-#             break
-#         end
-
-#         for neighbor in neighbors(g, current_node)
-#             edge_weight = distances[current_node, neighbor]
-#             if edge_weight > 0  # Ignore zero-length edges (non-edges)
-#                 new_dist = current_dist + edge_weight
-#                 if new_dist < dist[neighbor]
-#                     dist[neighbor] = new_dist
-#                     prev[neighbor] = current_node
-#                     enqueue!(pq, neighbor => new_dist)
-#                 end
-#             end
-#         end
-#     end
-
-#     # Reconstruct the shortest path
-#     path = []
-#     u = goal
-#     while u != -1
-#         push!(path, u)
-#         u = prev[u]
-#     end
-#     reverse!(path)  # The path is reconstructed backwards
-
-#     return path
-# end
-
 function shortest_path_dijkstra(g::Graph, start::Int, goal::Int, distances::Matrix{Int})
     n = nv(g)
     dist = fill(typemax(Int), n)
@@ -284,4 +243,10 @@ function find_shortest_path_arcs(g, F, distances)
         shortest_path_arcs[(u, v)] = arcs
     end
     return shortest_path_arcs
+end
+
+function print_time_difference(start_time, end_time)
+    time_diff = end_time - start_time
+    seconds = convert(Int, Millisecond(time_diff).value) / 1000.0
+    println("Solution time: ", seconds, " seconds")
 end
